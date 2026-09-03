@@ -815,6 +815,14 @@ img {
   text-align: left;
   width: 100%;
   margin-bottom: 0.15rem;
+  line-height: 1.25;
+}
+
+.sidebar-nav__item svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  display: block;
 }
 
 .sidebar-nav__item:hover {
