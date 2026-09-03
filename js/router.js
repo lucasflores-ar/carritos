@@ -5,6 +5,7 @@ import { renderMisTurnos } from './views/mis-turnos.js';
 import { renderUbicacionesList, renderUbicacionDetalle } from './views/ubicaciones.js';
 import { renderExhibidoresList, renderExhibidorDetalle } from './views/exhibidores.js';
 import { renderCalendario, cleanupCalendario } from './views/calendario.js';
+import { renderTurnoDetalle, cleanupTurnoDetalle } from './views/turno-detalle.js';
 import {
   renderBottomNav,
   renderSidebarNav,
