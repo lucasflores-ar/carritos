@@ -59,7 +59,7 @@ end;
 $$;
 
 create or replace function public.asegurar_semanas()
-returns void language plpgsql security definer set search_path = public as $$
+returns json language plpgsql security definer set search_path = public as $$
 declare
   v_lunes date;
   v_siguiente date;
@@ -95,6 +95,11 @@ begin
   if not exists (select 1 from public.turnos where semana_id = v_siguiente_id) then
     perform public.clonar_semana(v_vigente_id, v_siguiente_id);
   end if;
+
+  return json_build_object(
+    'vigente_id', v_vigente_id,
+    'siguiente_id', v_siguiente_id
+  );
 end;
 $$;
 
@@ -179,5 +184,7 @@ create policy semanas_select_anon on public.semanas for select to anon using (tr
 
 grant select on public.semanas to authenticated, anon;
 grant execute on function public.asegurar_semanas() to authenticated, anon;
+
+notify pgrst, 'reload schema';
 
 select public.asegurar_semanas();

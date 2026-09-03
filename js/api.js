@@ -38,15 +38,49 @@ export function invalidateCache(...keys) {
   });
 }
 
+async function semanasYaConfiguradas(client, vigenteId, siguienteId) {
+  const { data: semanas, error: semErr } = await client
+    .from('semanas')
+    .select('id')
+    .in('id', [vigenteId, siguienteId]);
+  if (semErr || !semanas || semanas.length < 2) return false;
+
+  const { count, error: turnosErr } = await client
+    .from('turnos')
+    .select('id', { count: 'exact', head: true })
+    .in('semana_id', [vigenteId, siguienteId]);
+  return !turnosErr && (count ?? 0) > 0;
+}
+
 async function ensureSemanasActivas() {
   if (isDemoMode()) {
     ensureDemoSemanas();
     return getSemanasActivas();
   }
   if (semanasEnsured && cache.semanas) return cache.semanas;
-  const { error: rpcError } = await getClient().rpc('asegurar_semanas');
-  if (rpcError) throw rpcError;
+
+  const client = getClient();
   const semanas = getSemanasVigenteYSiguiente();
+
+  const { error: rpcError } = await client.rpc('asegurar_semanas', {});
+
+  if (rpcError) {
+    const cacheMiss =
+      rpcError.message?.includes('schema cache') || rpcError.code === 'PGRST202';
+    const yaOk = await semanasYaConfiguradas(client, semanas.vigente.id, semanas.siguiente.id);
+    if (yaOk) {
+      cache.semanas = semanas;
+      semanasEnsured = true;
+      return semanas;
+    }
+    if (cacheMiss) {
+      throw new Error(
+        'Falta configurar semanas en Supabase. Ejecutá supabase/migrations/004_fix_rpc_semanas.sql en el SQL Editor.',
+      );
+    }
+    throw rpcError;
+  }
+
   cache.semanas = semanas;
   semanasEnsured = true;
   return semanas;
