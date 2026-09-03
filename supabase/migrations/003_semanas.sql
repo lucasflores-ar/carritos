@@ -103,7 +103,12 @@ begin
 end;
 $$;
 
-create or replace view public.v_turnos_enriquecidos as
+-- 6) Vistas (DROP necesario: PostgreSQL no permite cambiar columnas con CREATE OR REPLACE)
+drop view if exists public.v_exhibidores_resumen;
+drop view if exists public.v_ubicaciones_resumen;
+drop view if exists public.v_turnos_enriquecidos;
+
+create view public.v_turnos_enriquecidos as
 select t.id,
        t.semana_id,
        s.fecha_inicio as semana_inicio,
@@ -140,7 +145,7 @@ group by t.id, t.semana_id, s.fecha_inicio, s.fecha_fin, t.plantilla_id,
          u.nombre_punto, u.referencia_exacta, u.link_maps,
          e.nombre_exhibidor, e.responsable_guarda, e.direccion_retiro, e.estado;
 
-create or replace view public.v_exhibidores_resumen as
+create view public.v_exhibidores_resumen as
 select e.id,
        e.nombre_exhibidor,
        e.responsable_guarda,
@@ -159,7 +164,7 @@ left join public.v_turnos_enriquecidos v on v.exhibidor_id = e.id
   )
 group by e.id, e.nombre_exhibidor, e.responsable_guarda, e.direccion_retiro, e.estado;
 
-create or replace view public.v_ubicaciones_resumen as
+create view public.v_ubicaciones_resumen as
 select u.id,
        u.nombre_punto,
        u.referencia_exacta,

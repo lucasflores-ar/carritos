@@ -110,8 +110,12 @@ begin
 end;
 $$;
 
--- 6) Vistas
-create or replace view public.v_turnos_enriquecidos as
+-- 6) Vistas (DROP necesario: PostgreSQL no permite cambiar columnas con CREATE OR REPLACE)
+drop view if exists public.v_exhibidores_resumen;
+drop view if exists public.v_ubicaciones_resumen;
+drop view if exists public.v_turnos_enriquecidos;
+
+create view public.v_turnos_enriquecidos as
 select t.id,
        t.semana_id,
        s.fecha_inicio as semana_inicio,
@@ -148,7 +152,7 @@ group by t.id, t.semana_id, s.fecha_inicio, s.fecha_fin, t.plantilla_id,
          u.nombre_punto, u.referencia_exacta, u.link_maps,
          e.nombre_exhibidor, e.responsable_guarda, e.direccion_retiro, e.estado;
 
-create or replace view public.v_exhibidores_resumen as
+create view public.v_exhibidores_resumen as
 select e.id,
        e.nombre_exhibidor,
        e.responsable_guarda,
@@ -167,7 +171,7 @@ left join public.v_turnos_enriquecidos v on v.exhibidor_id = e.id
   )
 group by e.id, e.nombre_exhibidor, e.responsable_guarda, e.direccion_retiro, e.estado;
 
-create or replace view public.v_ubicaciones_resumen as
+create view public.v_ubicaciones_resumen as
 select u.id,
        u.nombre_punto,
        u.referencia_exacta,
@@ -196,6 +200,9 @@ create policy semanas_select_anon on public.semanas for select to anon using (tr
 
 -- 8) Permisos + recarga API
 grant select on public.semanas to authenticated, anon;
+grant select on public.v_turnos_enriquecidos to authenticated, anon;
+grant select on public.v_exhibidores_resumen to authenticated, anon;
+grant select on public.v_ubicaciones_resumen to authenticated, anon;
 grant execute on function public.lunes_de(date) to authenticated, anon;
 grant execute on function public.asegurar_semanas() to authenticated, anon;
 grant execute on function public.clonar_semana(text, text) to authenticated, anon;
