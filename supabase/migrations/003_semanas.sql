@@ -15,7 +15,7 @@ alter table public.turnos
 
 create index if not exists idx_turnos_semana on public.turnos (semana_id, orden_dia, hora_inicio);
 
-create or replace function public.lunes_de(p_fecha date default current_date)
+create or replace function public.lunes_de(p_fecha date)
 returns date language sql immutable as $$
   select (p_fecha - (extract(isodow from p_fecha)::integer - 1))::date;
 $$;
@@ -179,7 +179,10 @@ group by u.id, u.nombre_punto, u.referencia_exacta, u.link_maps;
 
 alter table public.semanas enable row level security;
 
+drop policy if exists semanas_select on public.semanas;
 create policy semanas_select on public.semanas for select to authenticated using (true);
+
+drop policy if exists semanas_select_anon on public.semanas;
 create policy semanas_select_anon on public.semanas for select to anon using (true);
 
 grant select on public.semanas to authenticated, anon;
