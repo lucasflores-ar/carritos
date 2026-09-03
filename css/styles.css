@@ -406,6 +406,33 @@ img {
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
 }
 
+.card--scroll-target {
+  scroll-margin-top: 0.5rem;
+  scroll-margin-bottom: 6rem;
+}
+
+.card--highlight {
+  animation: card-highlight 1.5s ease;
+}
+
+@keyframes card-highlight {
+  0%,
+  100% {
+    box-shadow: var(--shadow-card);
+  }
+  25%,
+  75% {
+    box-shadow: 0 0 0 3px rgb(225 112 74 / 0.45), var(--shadow-card);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--highlight {
+    animation: none;
+    box-shadow: 0 0 0 3px rgb(225 112 74 / 0.45), var(--shadow-card);
+  }
+}
+
 .card__head {
   display: flex;
   align-items: flex-start;

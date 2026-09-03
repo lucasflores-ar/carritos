@@ -23,11 +23,11 @@ export function renderBadge(estado) {
   return `<span class="badge badge--${cls}">${escapeHtml(estado)}</span>`;
 }
 
-export function renderTurnoCard(turno, { linkPrefix = '#/turno' } = {}) {
+export function renderTurnoCard(turno, { linkPrefix = '#/turno', scrollTarget = false } = {}) {
   const volText = turno.voluntarios_label || 'Todavía no hay voluntarios asignados';
   const retiro = truncate(`${turno.nombre_exhibidor} · retiro en ${turno.direccion_retiro}`, 48);
   return `
-    <article class="card card--clickable" data-href="${linkPrefix}/${turno.id}">
+    <article class="card card--clickable${scrollTarget ? ' card--scroll-target' : ''}"${scrollTarget ? ' id="primera-vacante"' : ''} data-href="${linkPrefix}/${turno.id}">
       <div class="card__head">
         <p class="card__meta"><strong>${escapeHtml(turno.dia_semana)} · ${formatHora(turno.hora_inicio)}</strong> ${escapeHtml(turno.id)}</p>
         ${renderBadge(turno.estado_turno)}

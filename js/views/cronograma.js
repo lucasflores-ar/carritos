@@ -11,10 +11,12 @@ import {
   groupByDay,
   contadoresGlobales,
   DIAS,
+  isDesktop,
 } from '../utils.js';
 
 let filtroDia = 'todos';
 let soloVacantes = false;
+let pendingScrollToVacante = false;
 
 export async function renderCronograma(ctx) {
   const turnos = await fetchTurnos();
@@ -29,6 +31,7 @@ export async function renderCronograma(ctx) {
   ).join('');
 
   const singleDay = filtroDia !== 'todos';
+  let scrollTargetPlaced = false;
 
   const mobileList = groups.length
     ? groups
@@ -37,7 +40,13 @@ export async function renderCronograma(ctx) {
         <section class="day-group">
           <h2 class="day-group__title">${escapeHtml(g.dia)} · ${g.turnos.length} turno${g.turnos.length !== 1 ? 's' : ''}</h2>
           <div class="day-group__cards">
-            ${g.turnos.map((t) => renderTurnoCard(t)).join('')}
+            ${g.turnos
+              .map((t) => {
+                const isTarget = soloVacantes && !scrollTargetPlaced;
+                if (isTarget) scrollTargetPlaced = true;
+                return renderTurnoCard(t, { scrollTarget: isTarget });
+              })
+              .join('')}
           </div>
         </section>`,
         )
@@ -82,6 +91,7 @@ export async function renderCronograma(ctx) {
   ctx.main.querySelector('[data-action="ver-vacantes"]')?.addEventListener('click', () => {
     soloVacantes = true;
     filtroDia = 'todos';
+    pendingScrollToVacante = !isDesktop();
     renderCronograma(ctx);
   });
   ctx.main.querySelectorAll('[data-dia]').forEach((chip) => {
@@ -90,6 +100,17 @@ export async function renderCronograma(ctx) {
       renderCronograma(ctx);
     });
   });
+
+  if (pendingScrollToVacante) {
+    pendingScrollToVacante = false;
+    requestAnimationFrame(() => {
+      const target = document.getElementById('primera-vacante');
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.classList.add('card--highlight');
+      setTimeout(() => target.classList.remove('card--highlight'), 1600);
+    });
+  }
 }
 
 export function resetCronogramaFilters() {
