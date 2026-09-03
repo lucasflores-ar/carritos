@@ -1,5 +1,6 @@
 import { fetchTurnosCalendario } from '../api.js';
 import { renderAppHeader, renderTurnoCard, bindCardNavigation } from '../components.js';
+import { copySemanaWhatsApp } from '../whatsapp-semana.js';
 import {
   escapeHtml,
   formatHora,
@@ -7,6 +8,7 @@ import {
   nombresCortos,
   calleCorta,
   badgeClass,
+  showToast,
 } from '../utils.js';
 
 const turnosCache = new Map();
@@ -43,10 +45,15 @@ function renderSemanaGrid(semana, turnos, label) {
     .join('');
 
   return `
-    <section class="cal-semana" aria-label="${escapeHtml(label)}">
+    <section class="cal-semana" aria-label="${escapeHtml(label)}" data-semana-id="${escapeHtml(semana.id)}">
       <header class="cal-semana__head">
-        <h3 class="cal-semana__title">${escapeHtml(label)}</h3>
-        <span class="cal-semana__range">${escapeHtml(rango)}</span>
+        <div class="cal-semana__head-main">
+          <h3 class="cal-semana__title">${escapeHtml(label)}</h3>
+          <span class="cal-semana__range">${escapeHtml(rango)}</span>
+        </div>
+        <button type="button" class="cal-semana__copy" data-copy-wa="${escapeHtml(semana.id)}" title="Copiar mensaje para WhatsApp" aria-label="Copiar semana para WhatsApp">
+          📋 WA
+        </button>
       </header>
       <div class="calendario-grid" role="grid">${columnas}</div>
     </section>`;
@@ -82,12 +89,16 @@ export async function renderCalendario(ctx) {
     [vigente.id, 'Semana en vigencia'],
     [siguiente.id, 'Semana siguiente'],
   ]);
+  const semanaById = new Map([
+    [vigente.id, vigente],
+    [siguiente.id, siguiente],
+  ]);
 
   ctx.main.innerHTML = `
     ${renderAppHeader(ctx)}
     <section class="hero hero--compact">
       <h2 class="hero__title hero__title--sm">Calendario · 2 semanas</h2>
-      <p class="hero__text hero__text--sm">Tocá un turno para ver el detalle. Los cambios en una semana no afectan a la otra.</p>
+      <p class="hero__text hero__text--sm">Tocá un turno para ver el detalle. Usá 📋 WA para copiar la semana al grupo.</p>
     </section>
     <div class="calendario-wrap">
       ${renderSemanaGrid(vigente, turnos, 'Semana en vigencia')}
@@ -98,6 +109,22 @@ export async function renderCalendario(ctx) {
     btn.addEventListener('click', () => {
       const turno = turnosCache.get(btn.dataset.turnoId);
       if (turno) showTurnoPopup(turno, semanaLabels.get(turno.semana_id) || 'Turno');
+    });
+  });
+
+  ctx.main.querySelectorAll('[data-copy-wa]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const semanaId = btn.dataset.copyWa;
+      const semana = semanaById.get(semanaId);
+      if (!semana) return;
+      btn.disabled = true;
+      try {
+        await copySemanaWhatsApp(semana, turnos, semanaLabels.get(semanaId));
+      } catch {
+        showToast('No se pudo copiar. Intentá de nuevo.');
+      } finally {
+        btn.disabled = false;
+      }
     });
   });
 

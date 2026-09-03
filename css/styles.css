@@ -1114,11 +1114,43 @@ img {
 
 .cal-semana__head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0 0.1rem;
   flex-shrink: 0;
+}
+
+.cal-semana__head-main {
+  min-width: 0;
+}
+
+.cal-semana__copy {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1;
+  padding: 0.3rem 0.45rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cal-semana__copy:hover {
+  background: #f3f4f6;
+}
+
+.cal-semana__copy:active {
+  opacity: 0.85;
+}
+
+.cal-semana__copy:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .cal-semana__title {
