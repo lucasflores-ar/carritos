@@ -2,7 +2,6 @@ import { fetchTurnos } from '../api.js';
 import {
   renderAppHeader,
   renderTurnoCard,
-  renderTurnoCardCompact,
   renderBadge,
   bindCardNavigation,
 } from '../components.js';
@@ -12,8 +11,6 @@ import {
   groupByDay,
   contadoresGlobales,
   DIAS,
-  DIAS_ORDEN,
-  isDesktop,
 } from '../utils.js';
 
 let filtroDia = 'todos';
@@ -42,16 +39,6 @@ export async function renderCronograma(ctx) {
         )
         .join('')
     : '<p class="empty-state">No hay turnos para este filtro.</p>';
-
-  const desktopGrid = isDesktop()
-    ? `<div class="cronograma-desktop-grid"><div class="week-grid">${DIAS_ORDEN.map((dia) => {
-        const delDia = lista.filter((t) => t.dia_semana === dia);
-        return `<div class="week-grid__col">
-          <p class="week-grid__col-title">${escapeHtml(dia.slice(0, 3))}</p>
-          ${delDia.map((t) => renderTurnoCardCompact(t)).join('') || '<p class="empty-state" style="padding:0.5rem">—</p>'}
-        </div>`;
-      }).join('')}</div></div>`
-    : '';
 
   ctx.main.innerHTML = `
     ${renderAppHeader(ctx)}
@@ -85,8 +72,7 @@ export async function renderCronograma(ctx) {
       </div>
       ${icons.clipboard}
     </div>
-    <div class="cronograma-mobile-list">${mobileList}</div>
-    ${desktopGrid}`;
+    <div class="cronograma-list">${mobileList}</div>`;
 
   bindCardNavigation(ctx.main);
   ctx.main.querySelector('[data-action="ver-vacantes"]')?.addEventListener('click', () => {

@@ -95,7 +95,7 @@ img {
 }
 
 .app-shell--desktop .main-content {
-  max-width: none;
+  max-width: 960px;
   padding: 2rem 2.5rem 3rem;
 }
 
@@ -929,54 +929,38 @@ img {
   flex: 1;
 }
 
-/* Desktop grid cronograma */
+/* Desktop cronograma — lista por día en 2 columnas en pantallas anchas */
 
 @media (min-width: 900px) {
   .stats-grid {
     max-width: 480px;
   }
 
-  .week-grid {
+  .cronograma-list {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 1.25rem;
     align-items: start;
   }
 
-  .week-grid__col-title {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--color-ink);
-    text-align: center;
-    margin: 0 0 0.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--color-border);
-  }
-
-  .week-grid__col .card {
-    font-size: 0.8125rem;
-    padding: 0.75rem;
-  }
-
-  .week-grid__col .card__title {
-    font-size: 0.875rem;
+  .cronograma-list .day-group {
+    break-inside: avoid;
   }
 
   .chips {
-    display: none;
-  }
-
-  .cronograma-mobile-list {
-    display: none;
-  }
-
-  .cronograma-desktop-grid {
-    display: block;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }
 
-.cronograma-desktop-grid {
-  display: none;
+@media (min-width: 1200px) {
+  .app-shell--desktop .main-content {
+    max-width: 1100px;
+  }
+
+  .cronograma-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* Loading */
