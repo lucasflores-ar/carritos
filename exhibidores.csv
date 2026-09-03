@@ -1,0 +1,6 @@
+﻿row_id,id,nombre_exhibidor,responsable_guarda,direccion_retiro,estado,created_at,updated_at
+1,EXH-01,Exhibidor 1 (Flia. Molina),Flia. Molina,Calle S. Ortiz y Corrientes,Activo,2026-08-24 19:17:42,2026-08-24 19:17:42
+2,EXH-02,Exhibidor 2 (Gibertoni),Gibertoni,Calle Corrientes y Troilo,Activo,2026-08-24 19:17:42,2026-08-24 19:17:42
+3,EXH-03,Exhibidor 3 (Génesis-Miselda),Génesis / Miselda,Calle Corrientes y Vera,Activo,2026-08-24 19:17:42,2026-08-24 19:17:42
+4,EXH-04,Exhibidor 4 (Zabala),Zabala,Pqe Centenario,Activo,2026-08-24 19:17:42,2026-08-24 19:17:42
+5,EXH-05,Exhibidor 5 (Carmen),Carmen,Corrientes y Troilo,Activo,2026-08-24 19:17:42,2026-08-24 19:17:42
