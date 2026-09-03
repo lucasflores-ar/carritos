@@ -10,14 +10,34 @@ import { getVoluntarioId } from './auth.js';
 
 let realtimeChannel = null;
 
+const cache = {
+  turnos: null,
+  ubicaciones: null,
+  exhibidores: null,
+};
+
+export function invalidateCache(...keys) {
+  if (!keys.length) {
+    cache.turnos = null;
+    cache.ubicaciones = null;
+    cache.exhibidores = null;
+    return;
+  }
+  keys.forEach((k) => {
+    cache[k] = null;
+  });
+}
+
 export async function fetchTurnos() {
   if (isDemoMode()) return [...demoStore.turnos];
+  if (cache.turnos) return cache.turnos;
   const { data, error } = await getClient()
     .from('v_turnos_enriquecidos')
     .select('*')
     .order('orden_dia')
     .order('hora_inicio');
   if (error) throw error;
+  cache.turnos = data;
   return data;
 }
 
@@ -28,8 +48,10 @@ export async function fetchTurno(id) {
 
 export async function fetchUbicaciones() {
   if (isDemoMode()) return [...demoStore.ubicaciones];
+  if (cache.ubicaciones) return cache.ubicaciones;
   const { data, error } = await getClient().from('v_ubicaciones_resumen').select('*').order('nombre_punto');
   if (error) throw error;
+  cache.ubicaciones = data;
   return data;
 }
 
@@ -40,8 +62,10 @@ export async function fetchUbicacion(id) {
 
 export async function fetchExhibidores() {
   if (isDemoMode()) return [...demoStore.exhibidores];
+  if (cache.exhibidores) return cache.exhibidores;
   const { data, error } = await getClient().from('v_exhibidores_resumen').select('*').order('nombre_exhibidor');
   if (error) throw error;
+  cache.exhibidores = data;
   return data;
 }
 
@@ -104,6 +128,7 @@ export async function tomarTurno(turnoId) {
     if (error.message?.includes('completo') || error.code === 'P0001') throw new Error('CUPO_LLENO');
     throw error;
   }
+  invalidateCache('turnos', 'ubicaciones', 'exhibidores');
 }
 
 export async function darseDeBaja(turnoId) {
@@ -120,6 +145,7 @@ export async function darseDeBaja(turnoId) {
     .eq('voluntario_id', volId)
     .eq('estado', 'confirmada');
   if (error) throw error;
+  invalidateCache('turnos', 'ubicaciones', 'exhibidores');
 }
 
 export async function updateExhibidor(id, payload) {
@@ -132,6 +158,7 @@ export async function updateExhibidor(id, payload) {
     .update(payload)
     .eq('id', id);
   if (error) throw error;
+  invalidateCache('turnos', 'ubicaciones', 'exhibidores');
 }
 
 export function subscribeAsignaciones(onChange) {
@@ -142,7 +169,10 @@ export function subscribeAsignaciones(onChange) {
   if (realtimeChannel) supabase.removeChannel(realtimeChannel);
   realtimeChannel = supabase
     .channel('asignaciones-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'asignaciones' }, () => onChange())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'asignaciones' }, () => {
+      invalidateCache('turnos', 'ubicaciones', 'exhibidores');
+      onChange();
+    })
     .subscribe();
   return () => {
     if (realtimeChannel) {

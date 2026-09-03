@@ -62,8 +62,11 @@ export function renderUbicacionCard(u) {
         ${vacBadge}
       </div>
       <h3 class="card__title">${escapeHtml(u.nombre_punto)}</h3>
-      <p class="card__row">${escapeHtml(u.referencia_exacta || '—')}</p>
-      <p class="card__row"><span style="color:var(--color-muted);font-size:0.75rem">Horarios</span><br>${escapeHtml(truncate(u.horarios, 56))}</p>
+      <p class="card__text">${escapeHtml(u.referencia_exacta || '—')}</p>
+      <div class="card__field">
+        <span class="card__field-label">Horarios</span>
+        <span class="card__field-value">${escapeHtml(truncate(u.horarios, 56))}</span>
+      </div>
       <div class="card__footer">
         <span>${u.total_turnos} turno${u.total_turnos !== 1 ? 's' : ''} semanal${u.total_turnos !== 1 ? 'es' : ''}</span>
         <span class="card__chevron">${icons.chevron}</span>
@@ -79,9 +82,12 @@ export function renderExhibidorCard(e) {
         <span class="badge badge--activo">${escapeHtml(e.estado)}</span>
       </div>
       <h3 class="card__title">${escapeHtml(e.nombre_exhibidor)}</h3>
-      <p class="card__row">Custodia: ${escapeHtml(e.responsable_guarda || '—')}</p>
-      <p class="card__row"><span style="color:var(--color-muted);font-size:0.75rem">Dirección de retiro</span><br>${escapeHtml(e.direccion_retiro || '—')}</p>
-      <p class="card__row">${escapeHtml(truncate(e.horarios, 56))}</p>
+      <p class="card__text">Custodia: ${escapeHtml(e.responsable_guarda || '—')}</p>
+      <div class="card__field">
+        <span class="card__field-label">Dirección de retiro</span>
+        <span class="card__field-value">${escapeHtml(e.direccion_retiro || '—')}</span>
+      </div>
+      <p class="card__text">${escapeHtml(truncate(e.horarios, 56))}</p>
       <div class="card__footer">
         <span></span>
         <span class="card__chevron">${icons.chevron}</span>

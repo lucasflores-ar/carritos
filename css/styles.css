@@ -444,6 +444,30 @@ img {
   margin-bottom: 0;
 }
 
+.card__text {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin: 0 0 0.35rem;
+}
+
+.card__field {
+  margin-bottom: 0.35rem;
+}
+
+.card__field-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-bottom: 0.15rem;
+}
+
+.card__field-value {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
 .card__row svg {
   flex-shrink: 0;
   margin-top: 0.1rem;

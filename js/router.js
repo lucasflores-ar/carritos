@@ -20,6 +20,9 @@ const bottomNav = document.getElementById('bottom-nav');
 const demoBanner = document.getElementById('demo-banner');
 const appShell = document.getElementById('app-shell');
 
+let lastDesktop = isDesktop();
+let renderSeq = 0;
+
 function parseRoute() {
   const hash = window.location.hash.slice(1) || '/cronograma';
   const parts = hash.replace(/^\//, '').split('/').filter(Boolean);
@@ -59,6 +62,28 @@ function bindShellAuth() {
   if (sidebarSlot) bindHeaderAuth(sidebarSlot, { onLogin: handleLogin, onLogout: handleLogout });
 }
 
+function updateShell(activeNav, ctx, desktop) {
+  appShell?.classList.toggle('app-shell--desktop', desktop);
+
+  const sidebarSlot = document.getElementById('sidebar-slot');
+  if (desktop && sidebarSlot) {
+    sidebarSlot.innerHTML = renderSidebarNav(activeNav, ctx);
+    bindNav(sidebarSlot);
+  } else if (sidebarSlot) {
+    sidebarSlot.innerHTML = '';
+  }
+
+  if (!bottomNav.querySelector('.bottom-nav__item')) {
+    bottomNav.innerHTML = renderBottomNav(activeNav);
+    bindNav(bottomNav);
+  } else {
+    bottomNav.querySelectorAll('.bottom-nav__item').forEach((btn) => {
+      const navId = btn.dataset.nav?.replace('#/', '') || '';
+      btn.classList.toggle('bottom-nav__item--active', navId === activeNav);
+    });
+  }
+}
+
 async function render() {
   cleanupTurnoDetalle();
 
@@ -67,28 +92,14 @@ async function render() {
   }
 
   bottomNav.classList.remove('hidden');
-  const desktop = isDesktop();
-  appShell?.classList.toggle('app-shell--desktop', desktop);
 
+  const desktop = isDesktop();
   const { parts } = parseRoute();
   const activeNav = getActiveNav(parts);
   const ctx = buildCtx();
+  const seq = ++renderSeq;
 
-  if (desktop) {
-    const sidebarSlot = document.getElementById('sidebar-slot');
-    if (sidebarSlot) {
-      sidebarSlot.innerHTML = renderSidebarNav(activeNav, ctx);
-      bindNav(sidebarSlot);
-    }
-  } else {
-    const sidebarSlot = document.getElementById('sidebar-slot');
-    if (sidebarSlot) sidebarSlot.innerHTML = '';
-  }
-
-  bottomNav.innerHTML = renderBottomNav(activeNav);
-  bindNav(bottomNav);
-
-  viewRoot.innerHTML = '<p class="loading">Cargando…</p>';
+  updateShell(activeNav, ctx, desktop);
 
   try {
     const route = parts[0] || 'cronograma';
@@ -115,16 +126,26 @@ async function render() {
         return;
     }
   } catch (err) {
-    viewRoot.innerHTML = `<p class="empty-state">Error: ${err.message}</p>`;
+    if (seq === renderSeq) {
+      viewRoot.innerHTML = `<p class="empty-state">Error: ${err.message}</p>`;
+    }
+    return;
   }
 
+  if (seq !== renderSeq) return;
   bindShellAuth();
 }
 
 export function initRouter() {
   onAuthChange(() => render());
   window.addEventListener('hashchange', render);
-  window.addEventListener('resize', () => render());
+  window.addEventListener('resize', () => {
+    const nowDesktop = isDesktop();
+    if (nowDesktop !== lastDesktop) {
+      lastDesktop = nowDesktop;
+      render();
+    }
+  });
   if (!window.location.hash || window.location.hash === '#') {
     window.location.hash = '#/cronograma';
   }
