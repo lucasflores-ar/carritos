@@ -1,5 +1,11 @@
 /** Datos semilla locales — mismo estado que schema_supabase.sql (modo demo). */
 
+import {
+  getSemanasVigenteYSiguiente,
+  turnoIdForSemana,
+  plantillaFromTurnoId,
+} from './semanas.js';
+
 export const DEMO_USER = {
   id: 'demo-user',
   email: 'lucas@demo.local',
@@ -14,7 +20,7 @@ export const DEMO_ADMIN = {
   rol: 'admin',
 };
 
-const asignaciones = [
+const plantillaAsignaciones = [
   ['TURNO-001', 'VOL-01'], ['TURNO-001', 'VOL-02'],
   ['TURNO-002', 'VOL-03'], ['TURNO-002', 'VOL-04'],
   ['TURNO-003', 'VOL-05'], ['TURNO-003', 'VOL-02'],
@@ -80,7 +86,7 @@ const ubicaciones = [
   { id: 'UBIC-07', nombre_punto: 'E. de Israel y Corrientes', referencia_exacta: 'Av. Estado de Israel y Corrientes', link_maps: null },
 ];
 
-const turnosRaw = [
+const turnosPlantilla = [
   ['TURNO-001', 'Martes', 2, '18:00:00', 'UBIC-01', 'EXH-01', 2],
   ['TURNO-002', 'Miércoles', 3, '07:00:00', 'UBIC-01', 'EXH-01', 2],
   ['TURNO-003', 'Miércoles', 3, '18:30:00', 'UBIC-01', 'EXH-01', 2],
@@ -103,46 +109,62 @@ const turnosRaw = [
   ['TURNO-020', 'Domingo', 7, '08:30:00', 'UBIC-07', 'EXH-01', 2],
 ];
 
-function buildTurnosEnriquecidos() {
+function formatHora(t) {
+  return t.slice(0, 5);
+}
+
+function resolveTurnoId(plantillaId, semanaId) {
+  return turnoIdForSemana(plantillaId, semanaId);
+}
+
+function buildTurnosEnriquecidos(asignaciones, semanaIds) {
   const asigByTurno = {};
-  for (const [turnoId, volId] of asignaciones) {
-    if (!asigByTurno[turnoId]) asigByTurno[turnoId] = [];
-    asigByTurno[turnoId].push(volId);
+  for (const a of asignaciones) {
+    if (a.estado !== 'confirmada') continue;
+    if (!asigByTurno[a.turno_id]) asigByTurno[a.turno_id] = [];
+    asigByTurno[a.turno_id].push(a.voluntario_id);
   }
 
-  return turnosRaw.map(([id, dia_semana, orden_dia, hora_inicio, ubicacion_id, exhibidor_id, cupos]) => {
-    const u = ubicaciones.find((x) => x.id === ubicacion_id);
-    const e = exhibidores.find((x) => x.id === exhibidor_id);
-    const volIds = asigByTurno[id] || [];
-    const ocupados = volIds.length;
-    const vacantes = cupos - ocupados;
-    let estado_turno = 'Cubierto';
-    if (ocupados === 0) estado_turno = 'Vacante';
-    else if (ocupados < cupos) estado_turno = 'Parcial';
-    const voluntarios_label = volIds.map((vid) => voluntarios[vid].nombre).join(' · ') || null;
+  const turnos = [];
+  for (const semanaId of semanaIds) {
+    for (const [plantillaId, dia_semana, orden_dia, hora_inicio, ubicacion_id, exhibidor_id, cupos] of turnosPlantilla) {
+      const id = resolveTurnoId(plantillaId, semanaId);
+      const u = ubicaciones.find((x) => x.id === ubicacion_id);
+      const e = exhibidores.find((x) => x.id === exhibidor_id);
+      const volIds = asigByTurno[id] || [];
+      const ocupados = volIds.length;
+      const vacantes = cupos - ocupados;
+      let estado_turno = 'Cubierto';
+      if (ocupados === 0) estado_turno = 'Vacante';
+      else if (ocupados < cupos) estado_turno = 'Parcial';
+      const voluntarios_label = volIds.map((vid) => voluntarios[vid].nombre).join(' · ') || null;
 
-    return {
-      id,
-      dia_semana,
-      orden_dia,
-      hora_inicio,
-      hora_fin: null,
-      ubicacion_id,
-      nombre_punto: u.nombre_punto,
-      referencia_exacta: u.referencia_exacta,
-      link_maps: u.link_maps,
-      exhibidor_id,
-      nombre_exhibidor: e.nombre_exhibidor,
-      responsable_guarda: e.responsable_guarda,
-      direccion_retiro: e.direccion_retiro,
-      estado_exhibidor: e.estado,
-      cupos,
-      ocupados,
-      vacantes,
-      estado_turno,
-      voluntarios_label,
-    };
-  });
+      turnos.push({
+        id,
+        semana_id: semanaId,
+        plantilla_id: plantillaId,
+        dia_semana,
+        orden_dia,
+        hora_inicio,
+        hora_fin: null,
+        ubicacion_id,
+        nombre_punto: u.nombre_punto,
+        referencia_exacta: u.referencia_exacta,
+        link_maps: u.link_maps,
+        exhibidor_id,
+        nombre_exhibidor: e.nombre_exhibidor,
+        responsable_guarda: e.responsable_guarda,
+        direccion_retiro: e.direccion_retiro,
+        estado_exhibidor: e.estado,
+        cupos,
+        ocupados,
+        vacantes,
+        estado_turno,
+        voluntarios_label,
+      });
+    }
+  }
+  return turnos;
 }
 
 function buildExhibidoresResumen(turnos) {
@@ -175,28 +197,85 @@ function buildUbicacionesResumen(turnos) {
   });
 }
 
-function formatHora(t) {
-  return t.slice(0, 5);
-}
-
-export const demoStore = {
-  turnos: buildTurnosEnriquecidos(),
-  exhibidores: null,
-  ubicaciones: null,
-  asignaciones: asignaciones.map(([turno_id, voluntario_id], i) => ({
+function seedAsignacionesVigente(vigenteId) {
+  return plantillaAsignaciones.map(([plantillaId, voluntario_id], i) => ({
     id: i + 1,
-    turno_id,
+    turno_id: resolveTurnoId(plantillaId, vigenteId),
     voluntario_id,
     estado: 'confirmada',
     created_at: new Date().toISOString(),
-  })),
+  }));
+}
+
+function cloneAsignacionesDemo(origenId, destinoId, asignaciones) {
+  const origenPrefix = `@${origenId}`;
+  const origenTurnos = asignaciones.filter(
+    (a) => a.estado === 'confirmada' && a.turno_id.endsWith(origenPrefix),
+  );
+  let nextId = asignaciones.reduce((m, a) => Math.max(m, a.id), 0) + 1;
+  const added = [];
+  for (const a of origenTurnos) {
+    const plantillaId = plantillaFromTurnoId(a.turno_id);
+    added.push({
+      id: nextId++,
+      turno_id: resolveTurnoId(plantillaId, destinoId),
+      voluntario_id: a.voluntario_id,
+      estado: 'confirmada',
+      created_at: new Date().toISOString(),
+    });
+  }
+  return added;
+}
+
+export const demoStore = {
+  turnos: [],
+  asignaciones: [],
+  semanaIds: [],
+  vigenteId: null,
+  exhibidores: null,
+  ubicaciones: null,
   voluntarios,
   exhibidoresList: exhibidores,
   ubicacionesList: ubicaciones,
 };
 
-demoStore.exhibidores = buildExhibidoresResumen(demoStore.turnos);
-demoStore.ubicaciones = buildUbicacionesResumen(demoStore.turnos);
+export function ensureDemoSemanas() {
+  const { vigente, siguiente } = getSemanasVigenteYSiguiente();
+  const activeIds = [vigente.id, siguiente.id];
+
+  demoStore.asignaciones = demoStore.asignaciones.filter((a) => {
+    const sid = a.turno_id.includes('@') ? a.turno_id.split('@')[1] : null;
+    return sid && activeIds.includes(sid);
+  });
+
+  demoStore.vigenteId = vigente.id;
+  demoStore.semanaIds = activeIds;
+
+  const hasAsigForSemana = (semanaId) =>
+    demoStore.asignaciones.some((a) => a.turno_id.endsWith(`@${semanaId}`));
+
+  if (!hasAsigForSemana(vigente.id)) {
+    demoStore.asignaciones = [
+      ...demoStore.asignaciones,
+      ...seedAsignacionesVigente(vigente.id),
+    ];
+  }
+
+  if (!hasAsigForSemana(siguiente.id)) {
+    demoStore.asignaciones.push(...cloneAsignacionesDemo(vigente.id, siguiente.id, demoStore.asignaciones));
+  }
+
+  refreshDemoTurnos(activeIds);
+}
+
+function refreshDemoTurnos(semanaIds = demoStore.semanaIds) {
+  demoStore.turnos = buildTurnosEnriquecidos(demoStore.asignaciones, semanaIds);
+  const vigenteTurnos = demoStore.turnos.filter((t) => t.semana_id === demoStore.vigenteId);
+  demoStore.exhibidores = buildExhibidoresResumen(vigenteTurnos);
+  demoStore.ubicaciones = buildUbicacionesResumen(vigenteTurnos);
+}
+
+ensureDemoSemanas();
 
 export function demoGetAsignacionesPorTurno(turnoId) {
   return demoStore.asignaciones
@@ -237,10 +316,4 @@ export function demoUpdateExhibidor(id, data) {
   if (!e) throw new Error('NOT_FOUND');
   Object.assign(e, data);
   refreshDemoTurnos();
-}
-
-function refreshDemoTurnos() {
-  demoStore.turnos = buildTurnosEnriquecidos();
-  demoStore.exhibidores = buildExhibidoresResumen(demoStore.turnos);
-  demoStore.ubicaciones = buildUbicacionesResumen(demoStore.turnos);
 }

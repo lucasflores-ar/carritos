@@ -312,9 +312,10 @@ insert into public.asignaciones (turno_id, voluntario_id) values
 -- PASOS POSTERIORES (manual):
 -- 1) Ejecutar supabase/migrations/001_auto_link_voluntario_on_signup.sql
 -- 2) Ejecutar supabase/migrations/002_anon_readonly.sql
--- 2) Completar voluntarios.email (mismo email que la invitación Auth)
--- 3) Authentication -> Users -> invitar por email
--- 4) Admin: insert into public.perfiles (user_id, rol) values ('UUID', 'admin');
+-- 3) Ejecutar supabase/migrations/003_semanas.sql (semanas vigente + siguiente)
+-- 4) Completar voluntarios.email (mismo email que la invitación Auth)
+-- 5) Authentication -> Users -> invitar por email
+-- 6) Admin: insert into public.perfiles (user_id, rol) values ('UUID', 'admin');
 --    (el trigger crea rol voluntario; el admin se promueve con este insert/update)
--- 5) Completar telefono y link_maps si aplica
+-- 7) Completar telefono y link_maps si aplica
 -- ============================================================

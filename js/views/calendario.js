@@ -1,9 +1,8 @@
-import { fetchTurnos } from '../api.js';
+import { fetchTurnosCalendario } from '../api.js';
 import { renderAppHeader, renderTurnoCard, bindCardNavigation } from '../components.js';
 import {
   escapeHtml,
   formatHora,
-  getSemanaVigente,
   formatSemanaRango,
   nombresCortos,
   calleCorta,
@@ -22,13 +21,44 @@ function renderCalEntry(t) {
     </button>`;
 }
 
-function showTurnoPopup(turno) {
+function renderSemanaGrid(semana, turnos, label) {
+  const rango = formatSemanaRango(semana.dias);
+  const columnas = semana.dias
+    .map((dia) => {
+      const delDia = turnos
+        .filter((t) => t.semana_id === semana.id && t.orden_dia === dia.orden)
+        .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
+      const hoy = dia.fecha.toDateString() === new Date().toDateString() ? ' cal-col--hoy' : '';
+      return `
+        <div class="cal-col${hoy}">
+          <div class="cal-col__head">
+            <span class="cal-col__day">${escapeHtml(dia.corto)}</span>
+            <span class="cal-col__date">${dia.diaNum}</span>
+          </div>
+          <div class="cal-col__body">
+            ${delDia.length ? delDia.map((t) => renderCalEntry(t)).join('') : '<span class="cal-col__empty">—</span>'}
+          </div>
+        </div>`;
+    })
+    .join('');
+
+  return `
+    <section class="cal-semana" aria-label="${escapeHtml(label)}">
+      <header class="cal-semana__head">
+        <h3 class="cal-semana__title">${escapeHtml(label)}</h3>
+        <span class="cal-semana__range">${escapeHtml(rango)}</span>
+      </header>
+      <div class="calendario-grid" role="grid">${columnas}</div>
+    </section>`;
+}
+
+function showTurnoPopup(turno, semanaLabel) {
   const backdrop = document.createElement('div');
   backdrop.className = 'dialog-backdrop turno-popup-backdrop';
   backdrop.innerHTML = `
     <div class="turno-popup" role="dialog" aria-modal="true" aria-labelledby="turno-popup-title">
       <button type="button" class="login-modal__close" data-action="close" aria-label="Cerrar">×</button>
-      <p class="turno-popup__eyebrow" id="turno-popup-title">${escapeHtml(turno.id)} · ${escapeHtml(turno.dia_semana)} ${formatHora(turno.hora_inicio)}</p>
+      <p class="turno-popup__eyebrow" id="turno-popup-title">${escapeHtml(semanaLabel)} · ${escapeHtml(turno.dia_semana)} ${formatHora(turno.hora_inicio)}</p>
       <div class="turno-popup__card">${renderTurnoCard(turno)}</div>
       <a class="btn btn--primary btn--sm turno-popup__cta" href="#/turno/${escapeHtml(turno.id)}">Ver detalle y gestionar</a>
     </div>`;
@@ -44,47 +74,30 @@ function showTurnoPopup(turno) {
 }
 
 export async function renderCalendario(ctx) {
-  const turnos = await fetchTurnos();
+  const { vigente, siguiente, turnos } = await fetchTurnosCalendario();
   turnosCache.clear();
   turnos.forEach((t) => turnosCache.set(t.id, t));
 
-  const semana = getSemanaVigente();
-  const rango = formatSemanaRango(semana);
-
-  const columnas = semana
-    .map((dia) => {
-      const delDia = turnos
-        .filter((t) => t.orden_dia === dia.orden)
-        .sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
-      const hoy =
-        dia.fecha.toDateString() === new Date().toDateString() ? ' cal-col--hoy' : '';
-      return `
-        <div class="cal-col${hoy}">
-          <div class="cal-col__head">
-            <span class="cal-col__day">${escapeHtml(dia.corto)}</span>
-            <span class="cal-col__date">${dia.diaNum}</span>
-          </div>
-          <div class="cal-col__body">
-            ${delDia.length ? delDia.map((t) => renderCalEntry(t)).join('') : '<span class="cal-col__empty">—</span>'}
-          </div>
-        </div>`;
-    })
-    .join('');
+  const semanaLabels = new Map([
+    [vigente.id, 'Semana en vigencia'],
+    [siguiente.id, 'Semana siguiente'],
+  ]);
 
   ctx.main.innerHTML = `
     ${renderAppHeader(ctx)}
     <section class="hero hero--compact">
-      <h2 class="hero__title hero__title--sm">Semana ${escapeHtml(rango)}</h2>
-      <p class="hero__text hero__text--sm">Tocá un turno para ver el detalle completo.</p>
+      <h2 class="hero__title hero__title--sm">Calendario · 2 semanas</h2>
+      <p class="hero__text hero__text--sm">Tocá un turno para ver el detalle. Los cambios en una semana no afectan a la otra.</p>
     </section>
     <div class="calendario-wrap">
-      <div class="calendario-grid" role="grid" aria-label="Calendario semanal de turnos">${columnas}</div>
+      ${renderSemanaGrid(vigente, turnos, 'Semana en vigencia')}
+      ${renderSemanaGrid(siguiente, turnos, 'Semana siguiente')}
     </div>`;
 
   ctx.main.querySelectorAll('[data-turno-id]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const turno = turnosCache.get(btn.dataset.turnoId);
-      if (turno) showTurnoPopup(turno);
+      if (turno) showTurnoPopup(turno, semanaLabels.get(turno.semana_id) || 'Turno');
     });
   });
 
