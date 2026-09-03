@@ -929,22 +929,34 @@ img {
   flex: 1;
 }
 
-/* Desktop cronograma — lista por día en 2 columnas en pantallas anchas */
+/* Desktop cronograma */
 
 @media (min-width: 900px) {
   .stats-grid {
     max-width: 480px;
   }
 
-  .cronograma-list {
+  /* Todos: columnas por día de la semana */
+  .cronograma-list:not(.cronograma-list--single-day) {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0 1.25rem;
     align-items: start;
   }
 
-  .cronograma-list .day-group {
+  .cronograma-list:not(.cronograma-list--single-day) .day-group {
     break-inside: avoid;
+  }
+
+  /* Un solo día: columnas por tarjeta de turno */
+  .cronograma-list--single-day .day-group__cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .cronograma-list--single-day .day-group__cards .card {
+    margin-bottom: 0;
   }
 
   .chips {
@@ -958,7 +970,11 @@ img {
     max-width: 1100px;
   }
 
-  .cronograma-list {
+  .cronograma-list:not(.cronograma-list--single-day) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cronograma-list--single-day .day-group__cards {
     grid-template-columns: repeat(3, 1fr);
   }
 }

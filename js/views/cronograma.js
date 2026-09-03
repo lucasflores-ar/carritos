@@ -28,13 +28,17 @@ export async function renderCronograma(ctx) {
       `<button type="button" class="chip${filtroDia === d.key ? ' chip--active' : ''}" data-dia="${d.key}">${escapeHtml(d.label)}</button>`,
   ).join('');
 
+  const singleDay = filtroDia !== 'todos';
+
   const mobileList = groups.length
     ? groups
         .map(
           (g) => `
         <section class="day-group">
           <h2 class="day-group__title">${escapeHtml(g.dia)} · ${g.turnos.length} turno${g.turnos.length !== 1 ? 's' : ''}</h2>
-          ${g.turnos.map((t) => renderTurnoCard(t)).join('')}
+          <div class="day-group__cards">
+            ${g.turnos.map((t) => renderTurnoCard(t)).join('')}
+          </div>
         </section>`,
         )
         .join('')
@@ -72,7 +76,7 @@ export async function renderCronograma(ctx) {
       </div>
       ${icons.clipboard}
     </div>
-    <div class="cronograma-list">${mobileList}</div>`;
+    <div class="cronograma-list${singleDay ? ' cronograma-list--single-day' : ''}">${mobileList}</div>`;
 
   bindCardNavigation(ctx.main);
   ctx.main.querySelector('[data-action="ver-vacantes"]')?.addEventListener('click', () => {
