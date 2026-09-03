@@ -15,7 +15,7 @@ export async function renderExhibidoresList(ctx) {
       <h2 class="hero__title">Exhibidores</h2>
       <p class="hero__text">Consultá quién guarda cada exhibidor y dónde retirarlo.</p>
     </section>
-    ${exhibidores.map((e) => renderExhibidorCard(e)).join('')}`;
+    <div class="card-grid">${exhibidores.map((e) => renderExhibidorCard(e)).join('')}</div>`;
   bindCardNavigation(ctx.main);
 }
 
@@ -69,7 +69,7 @@ export async function renderExhibidorDetalle(ctx, id) {
     </div>
     ${formAdmin}
     <h3 class="section-head__title" style="margin-top:1rem">Turnos de la semana</h3>
-    ${delExh.map((t) => renderTurnoCard(t)).join('')}`;
+    <div class="card-grid">${delExh.map((t) => renderTurnoCard(t)).join('')}</div>`;
 
   bindCardNavigation(ctx.main);
   ctx.main.querySelector('#form-exhibidor')?.addEventListener('submit', async (ev) => {

@@ -931,9 +931,25 @@ img {
 
 /* Desktop cronograma */
 
+/* Grilla reutilizable de tarjetas (ubicaciones, exhibidores, etc.) */
+
+.card-grid .card {
+  margin-bottom: 0.75rem;
+}
+
 @media (min-width: 900px) {
   .stats-grid {
     max-width: 480px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .card-grid .card {
+    margin-bottom: 0;
   }
 
   /* Todos: columnas por día de la semana */
@@ -975,6 +991,10 @@ img {
   }
 
   .cronograma-list--single-day .day-group__cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .card-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }

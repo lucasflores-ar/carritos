@@ -12,7 +12,7 @@ export async function renderUbicacionesList(ctx) {
       <h2 class="hero__title">Ubicaciones</h2>
       <p class="hero__text">Consultá la referencia exacta y los horarios de cada punto.</p>
     </section>
-    ${ubicaciones.map((u) => renderUbicacionCard(u)).join('')}`;
+    <div class="card-grid">${ubicaciones.map((u) => renderUbicacionCard(u)).join('')}</div>`;
   bindCardNavigation(ctx.main);
 }
 
@@ -40,6 +40,6 @@ export async function renderUbicacionDetalle(ctx, id) {
       <p>${u.total_turnos} turno${u.total_turnos !== 1 ? 's' : ''} programado${u.total_turnos !== 1 ? 's' : ''} en este punto</p>
     </div>
     <h3 class="section-head__title" style="margin-top:1rem">Turnos en este punto</h3>
-    ${delPunto.map((t) => renderTurnoCard(t)).join('')}`;
+    <div class="card-grid">${delPunto.map((t) => renderTurnoCard(t)).join('')}</div>`;
   bindCardNavigation(ctx.main);
 }
