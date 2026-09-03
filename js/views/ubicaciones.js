@@ -6,7 +6,7 @@ import { icons } from '../icons.js';
 export async function renderUbicacionesList(ctx) {
   const ubicaciones = await fetchUbicaciones();
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <section class="hero">
       <p class="hero__eyebrow">Puntos activos</p>
       <h2 class="hero__title">Ubicaciones</h2>
@@ -27,7 +27,7 @@ export async function renderUbicacionDetalle(ctx, id) {
   const maps = mapsUrl({ nombre_punto: u.nombre_punto, link_maps: u.link_maps });
 
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <nav class="breadcrumb"><a href="#/ubicaciones">Ubicaciones</a><span class="breadcrumb__sep">›</span>${escapeHtml(u.nombre_punto)}</nav>
     <div class="detail-head">
       <p class="detail-head__id">${escapeHtml(u.id)}</p>

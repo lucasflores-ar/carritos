@@ -3,8 +3,24 @@ import { renderAppHeader, renderBadge, bindCardNavigation } from '../components.
 import { icons } from '../icons.js';
 import { escapeHtml, formatHora, mapsUrl } from '../utils.js';
 import { getVoluntarioId } from '../auth.js';
+import { requireAuth } from './login.js';
 
 export async function renderMisTurnos(ctx) {
+  if (!ctx.authenticated) {
+    ctx.main.innerHTML = `
+      ${renderAppHeader(ctx)}
+      <section class="hero">
+        <p class="hero__eyebrow">Tu semana</p>
+        <h2 class="hero__title">Mis turnos</h2>
+        <p class="hero__text">Iniciá sesión para ver tus turnos asignados y el checklist pre-salida.</p>
+      </section>
+      <button type="button" class="btn btn--primary" data-action="login-prompt">Iniciar sesión</button>`;
+    ctx.main.querySelector('[data-action="login-prompt"]')?.addEventListener('click', () =>
+      requireAuth('Ingresá para ver tus turnos asignados.'),
+    );
+    return;
+  }
+
   const volId = getVoluntarioId();
   const turnos = volId ? await fetchMisTurnos(volId) : [];
 
@@ -35,7 +51,7 @@ export async function renderMisTurnos(ctx) {
   );
 
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <section class="hero">
       <p class="hero__eyebrow">Tu semana</p>
       <h2 class="hero__title">Mis turnos</h2>

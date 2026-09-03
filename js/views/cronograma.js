@@ -54,7 +54,7 @@ export async function renderCronograma(ctx) {
     : '';
 
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <section class="hero">
       <p class="hero__eyebrow">Cronograma semanal</p>
       <h2 class="hero__title">Turnos de predicación pública</h2>

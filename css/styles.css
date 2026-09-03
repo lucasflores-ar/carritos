@@ -826,6 +826,37 @@ img {
   text-align: center;
 }
 
+.btn-logout--login {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.login-card--modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0;
+  box-shadow: var(--shadow-nav);
+}
+
+.login-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.login-modal__close:hover {
+  color: var(--color-ink);
+}
+
+
 /* Demo banner */
 
 .demo-banner {

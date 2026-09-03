@@ -3,12 +3,13 @@ import { renderAppHeader, renderExhibidorCard, renderTurnoCard, bindCardNavigati
 import { escapeHtml } from '../utils.js';
 import { icons } from '../icons.js';
 import { isAdmin } from '../auth.js';
+import { requireAuth } from './login.js';
 import { showToast } from '../utils.js';
 
 export async function renderExhibidoresList(ctx) {
   const exhibidores = await fetchExhibidores();
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <section class="hero">
       <p class="hero__eyebrow">Logística semanal</p>
       <h2 class="hero__title">Exhibidores</h2>
@@ -55,7 +56,7 @@ export async function renderExhibidorDetalle(ctx, id) {
     : '';
 
   ctx.main.innerHTML = `
-    ${renderAppHeader({ nombre: ctx.nombre })}
+    ${renderAppHeader(ctx)}
     <nav class="breadcrumb"><a href="#/exhibidores">Exhibidores</a><span class="breadcrumb__sep">›</span>${escapeHtml(e.id)}</nav>
     <div class="detail-head">
       <div class="detail-head__row">
@@ -73,6 +74,8 @@ export async function renderExhibidorDetalle(ctx, id) {
   bindCardNavigation(ctx.main);
   ctx.main.querySelector('#form-exhibidor')?.addEventListener('submit', async (ev) => {
     ev.preventDefault();
+    const ok = await requireAuth('Ingresá como administrador para guardar cambios.');
+    if (!ok) return;
     const fd = new FormData(ev.target);
     try {
       await updateExhibidor(id, {

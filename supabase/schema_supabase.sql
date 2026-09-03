@@ -311,6 +311,7 @@ insert into public.asignaciones (turno_id, voluntario_id) values
 -- ============================================================
 -- PASOS POSTERIORES (manual):
 -- 1) Ejecutar supabase/migrations/001_auto_link_voluntario_on_signup.sql
+-- 2) Ejecutar supabase/migrations/002_anon_readonly.sql
 -- 2) Completar voluntarios.email (mismo email que la invitación Auth)
 -- 3) Authentication -> Users -> invitar por email
 -- 4) Admin: insert into public.perfiles (user_id, rol) values ('UUID', 'admin');

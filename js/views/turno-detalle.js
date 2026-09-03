@@ -17,6 +17,7 @@ import {
   whatsappUrl,
 } from '../utils.js';
 import { isAdmin, getVoluntarioId } from '../auth.js';
+import { requireAuth } from './login.js';
 
 let unsubscribeRealtime = null;
 
@@ -45,7 +46,7 @@ export async function renderTurnoDetalle(ctx, id) {
     const { bannerHtml, actionsHtml } = buildBanner(turno, asigs, anotado, admin, volId);
 
     ctx.main.innerHTML = `
-      ${renderAppHeader({ nombre: ctx.nombre })}
+      ${renderAppHeader(ctx)}
       <nav class="breadcrumb"><a href="#/cronograma">Cronograma</a><span class="breadcrumb__sep">›</span>${escapeHtml(id)}</nav>
       <div class="detail-head">
         <div class="detail-head__row">
@@ -71,7 +72,7 @@ export async function renderTurnoDetalle(ctx, id) {
       ${anotado ? renderChecklist(turno, asigs, volId) : ''}
       <div class="banner banner--${bannerVariant(turno, anotado)}">${bannerHtml}${actionsHtml ? `<div class="banner__actions">${actionsHtml}</div>` : ''}</div>`;
 
-    bindActions(ctx, id, turno, anotado);
+    bindActions(ctx, id);
     bindCardNavigation(ctx.main);
   };
 
@@ -148,8 +149,10 @@ function renderChecklist(turno, asigs, volId) {
     </div>`;
 }
 
-function bindActions(ctx, id, turno, anotado) {
+function bindActions(ctx, id) {
   ctx.main.querySelector('[data-action="tomar"]')?.addEventListener('click', async () => {
+    const ok = await requireAuth('Ingresá para tomar este turno.');
+    if (!ok) return;
     const btn = ctx.main.querySelector('[data-action="tomar"]');
     btn.disabled = true;
     try {
@@ -170,12 +173,14 @@ function bindActions(ctx, id, turno, anotado) {
   });
 
   ctx.main.querySelector('[data-action="baja"]')?.addEventListener('click', async () => {
-    const ok = await confirmDialog({
+    const ok = await requireAuth('Ingresá para gestionar tu turno.');
+    if (!ok) return;
+    const confirmed = await confirmDialog({
       title: 'Darse de baja',
       text: '¿Confirmás que querés liberar tu cupo en este turno?',
       confirmLabel: 'Sí, darme de baja',
     });
-    if (!ok) return;
+    if (!confirmed) return;
     try {
       await darseDeBaja(id);
       showToast('Te diste de baja del turno');

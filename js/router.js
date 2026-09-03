@@ -1,11 +1,17 @@
-import { getSession, getDisplayName, logout } from './auth.js';
-import { renderLogin, mountLogin } from './views/login.js';
+import { getDisplayName, logout, isAuthenticated, onAuthChange } from './auth.js';
+import { requireAuth, showLoginModal } from './views/login.js';
 import { renderCronograma } from './views/cronograma.js';
 import { renderMisTurnos } from './views/mis-turnos.js';
 import { renderUbicacionesList, renderUbicacionDetalle } from './views/ubicaciones.js';
 import { renderExhibidoresList, renderExhibidorDetalle } from './views/exhibidores.js';
 import { renderTurnoDetalle, cleanupTurnoDetalle } from './views/turno-detalle.js';
-import { renderBottomNav, renderSidebarNav, bindNav, NAV_ITEMS } from './components.js';
+import {
+  renderBottomNav,
+  renderSidebarNav,
+  bindNav,
+  bindHeaderAuth,
+  NAV_ITEMS,
+} from './components.js';
 import { isDemoMode } from './supabase-client.js';
 import { isDesktop } from './utils.js';
 
@@ -13,8 +19,6 @@ const viewRoot = document.getElementById('view-root');
 const bottomNav = document.getElementById('bottom-nav');
 const demoBanner = document.getElementById('demo-banner');
 const appShell = document.getElementById('app-shell');
-
-let loginError = null;
 
 function parseRoute() {
   const hash = window.location.hash.slice(1) || '/cronograma';
@@ -30,26 +34,36 @@ function getActiveNav(parts) {
   return match?.id || 'cronograma';
 }
 
+function buildCtx() {
+  const authenticated = isAuthenticated();
+  return {
+    main: viewRoot,
+    authenticated,
+    nombre: authenticated ? getDisplayName() : null,
+  };
+}
+
+async function handleLogin() {
+  await showLoginModal();
+  render();
+}
+
+async function handleLogout() {
+  await logout();
+  render();
+}
+
+function bindShellAuth() {
+  bindHeaderAuth(viewRoot, { onLogin: handleLogin, onLogout: handleLogout });
+  const sidebarSlot = document.getElementById('sidebar-slot');
+  if (sidebarSlot) bindHeaderAuth(sidebarSlot, { onLogin: handleLogin, onLogout: handleLogout });
+}
+
 async function render() {
   cleanupTurnoDetalle();
-  const session = getSession();
 
   if (demoBanner) {
     demoBanner.classList.toggle('hidden', !isDemoMode());
-  }
-
-  if (!session) {
-    bottomNav.classList.add('hidden');
-    appShell?.classList.remove('app-shell--desktop');
-    viewRoot.innerHTML = renderLogin({ error: loginError });
-    mountLogin(viewRoot, {
-      onSuccess: (opts) => {
-        loginError = opts?.error ?? null;
-        if (!opts?.error) loginError = null;
-        render();
-      },
-    });
-    return;
   }
 
   bottomNav.classList.remove('hidden');
@@ -58,18 +72,17 @@ async function render() {
 
   const { parts } = parseRoute();
   const activeNav = getActiveNav(parts);
-  const ctx = {
-    main: viewRoot,
-    nombre: getDisplayName(),
-  };
+  const ctx = buildCtx();
 
   if (desktop) {
     const sidebarSlot = document.getElementById('sidebar-slot');
     if (sidebarSlot) {
-      sidebarSlot.innerHTML = renderSidebarNav(activeNav, { nombre: ctx.nombre });
+      sidebarSlot.innerHTML = renderSidebarNav(activeNav, ctx);
       bindNav(sidebarSlot);
-      sidebarSlot.querySelector('[data-action="logout"]')?.addEventListener('click', handleLogout);
     }
+  } else {
+    const sidebarSlot = document.getElementById('sidebar-slot');
+    if (sidebarSlot) sidebarSlot.innerHTML = '';
   }
 
   bottomNav.innerHTML = renderBottomNav(activeNav);
@@ -105,16 +118,11 @@ async function render() {
     viewRoot.innerHTML = `<p class="empty-state">Error: ${err.message}</p>`;
   }
 
-  viewRoot.querySelector('[data-action="logout"]')?.addEventListener('click', handleLogout);
-}
-
-async function handleLogout() {
-  await logout();
-  window.location.hash = '#/login';
-  render();
+  bindShellAuth();
 }
 
 export function initRouter() {
+  onAuthChange(() => render());
   window.addEventListener('hashchange', render);
   window.addEventListener('resize', () => render());
   if (!window.location.hash || window.location.hash === '#') {
@@ -122,3 +130,5 @@ export function initRouter() {
   }
   render();
 }
+
+export { requireAuth };

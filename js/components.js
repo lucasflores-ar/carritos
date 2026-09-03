@@ -1,17 +1,19 @@
 import { icons } from './icons.js';
 import { escapeHtml, formatHora, badgeClass, truncate } from './utils.js';
 
-export function renderAppHeader({ nombre, onLogout }) {
+export function renderAppHeader({ nombre, authenticated }) {
+  const greeting = authenticated ? `Hola, ${escapeHtml(nombre)}` : 'Programa semanal';
+  const authBtn = authenticated
+    ? `<button type="button" class="btn-logout" data-action="logout">Cerrar sesión ${icons.logout}</button>`
+    : `<button type="button" class="btn-logout btn-logout--login" data-action="login">Iniciar sesión</button>`;
   return `
     <header class="app-header">
       <div class="app-header__top">
         <div>
           <p class="app-header__brand">Gestión de Exhibidores</p>
-          <h1 class="app-header__greeting">Hola, ${escapeHtml(nombre)}</h1>
+          <h1 class="app-header__greeting">${greeting}</h1>
         </div>
-        <button type="button" class="btn-logout" data-action="logout">
-          Cerrar sesión ${icons.logout}
-        </button>
+        ${authBtn}
       </div>
     </header>`;
 }
@@ -104,7 +106,7 @@ export function renderBottomNav(activeId) {
   ).join('');
 }
 
-export function renderSidebarNav(activeId, { nombre, onLogout }) {
+export function renderSidebarNav(activeId, { nombre, authenticated }) {
   const items = NAV_ITEMS.map(
     (item) => `
     <button type="button" class="sidebar-nav__item${item.id === activeId ? ' sidebar-nav__item--active' : ''}" data-nav="${item.hash}">
@@ -112,15 +114,22 @@ export function renderSidebarNav(activeId, { nombre, onLogout }) {
       ${escapeHtml(item.label)}
     </button>`,
   ).join('');
+  const userLine = authenticated ? `Hola, ${escapeHtml(nombre)}` : 'Programa semanal';
+  const authBtn = authenticated
+    ? `<button type="button" class="sidebar-nav__item" data-action="logout">${icons.logout} Cerrar sesión</button>`
+    : `<button type="button" class="sidebar-nav__item" data-action="login">Iniciar sesión</button>`;
   return `
     <nav class="sidebar-nav" aria-label="Navegación principal">
       <p class="sidebar-nav__brand">Gestión de Exhibidores</p>
-      <p class="sidebar-nav__user">Hola, ${escapeHtml(nombre)}</p>
+      <p class="sidebar-nav__user">${userLine}</p>
       ${items}
-      <div class="sidebar-nav__logout">
-        <button type="button" class="sidebar-nav__item" data-action="logout">${icons.logout} Cerrar sesión</button>
-      </div>
+      <div class="sidebar-nav__logout">${authBtn}</div>
     </nav>`;
+}
+
+export function bindHeaderAuth(root, { onLogin, onLogout }) {
+  root.querySelector('[data-action="login"]')?.addEventListener('click', onLogin);
+  root.querySelector('[data-action="logout"]')?.addEventListener('click', onLogout);
 }
 
 export function bindCardNavigation(root) {

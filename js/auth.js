@@ -3,6 +3,21 @@ import { DEMO_USER } from './demo-data.js';
 
 let session = null;
 let profile = null;
+const authListeners = new Set();
+
+export function onAuthChange(fn) {
+  authListeners.add(fn);
+  return () => authListeners.delete(fn);
+}
+
+function notifyAuthChange() {
+  authListeners.forEach((fn) => fn());
+}
+
+export function isAuthenticated() {
+  if (isDemoMode()) return !!session;
+  return !!session?.user;
+}
 
 export function getSession() {
   return session;
@@ -43,6 +58,7 @@ export async function initAuth() {
     session = s;
     if (s) await loadProfile();
     else profile = null;
+    notifyAuthChange();
   });
   return session;
 }
@@ -66,6 +82,7 @@ export async function login(email, password) {
     session = { ...DEMO_USER, email };
     profile = { rol: DEMO_USER.rol, voluntarioId: DEMO_USER.voluntarioId };
     localStorage.setItem('demo_session', JSON.stringify(session));
+    notifyAuthChange();
     return session;
   }
   const supabase = getClient();
@@ -73,6 +90,7 @@ export async function login(email, password) {
   if (error) throw error;
   session = data.session;
   await loadProfile();
+  notifyAuthChange();
   return session;
 }
 
@@ -81,22 +99,26 @@ export async function logout() {
     session = null;
     profile = null;
     localStorage.removeItem('demo_session');
+    notifyAuthChange();
     return;
   }
   const supabase = getClient();
   await supabase.auth.signOut();
   session = null;
   profile = null;
+  notifyAuthChange();
 }
 
 export function loginDemo() {
   session = { ...DEMO_USER };
   profile = { rol: DEMO_USER.rol, voluntarioId: DEMO_USER.voluntarioId };
   localStorage.setItem('demo_session', JSON.stringify(session));
+  notifyAuthChange();
 }
 
 export function loginDemoAdmin() {
   session = { ...DEMO_USER, nombre: 'Admin Demo', rol: 'admin' };
   profile = { rol: 'admin', voluntarioId: DEMO_USER.voluntarioId };
   localStorage.setItem('demo_session', JSON.stringify(session));
+  notifyAuthChange();
 }
