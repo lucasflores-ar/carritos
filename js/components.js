@@ -97,6 +97,7 @@ export function renderExhibidorCard(e) {
 
 export const NAV_ITEMS = [
   { id: 'cronograma', label: 'Cronograma', hash: '#/cronograma', icon: 'home' },
+  { id: 'calendario', label: 'Semana', hash: '#/calendario', icon: 'calendar' },
   { id: 'mis-turnos', label: 'Mis turnos', hash: '#/mis-turnos', icon: 'list' },
   { id: 'ubicaciones', label: 'Ubicaciones', hash: '#/ubicaciones', icon: 'mapPin' },
   { id: 'exhibidores', label: 'Exhibidores', hash: '#/exhibidores', icon: 'package' },

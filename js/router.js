@@ -4,7 +4,7 @@ import { renderCronograma } from './views/cronograma.js';
 import { renderMisTurnos } from './views/mis-turnos.js';
 import { renderUbicacionesList, renderUbicacionDetalle } from './views/ubicaciones.js';
 import { renderExhibidoresList, renderExhibidorDetalle } from './views/exhibidores.js';
-import { renderTurnoDetalle, cleanupTurnoDetalle } from './views/turno-detalle.js';
+import { renderCalendario, cleanupCalendario } from './views/calendario.js';
 import {
   renderBottomNav,
   renderSidebarNav,
@@ -86,6 +86,7 @@ function updateShell(activeNav, ctx, desktop) {
 
 async function render() {
   cleanupTurnoDetalle();
+  cleanupCalendario({ main: viewRoot });
 
   if (demoBanner) {
     demoBanner.classList.toggle('hidden', !isDemoMode());
@@ -106,6 +107,9 @@ async function render() {
     switch (route) {
       case 'cronograma':
         await renderCronograma(ctx);
+        break;
+      case 'calendario':
+        await renderCalendario(ctx);
         break;
       case 'mis-turnos':
         await renderMisTurnos(ctx);

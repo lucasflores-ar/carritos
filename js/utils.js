@@ -11,6 +11,52 @@ export const DIAS = [
 
 export const DIAS_ORDEN = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
+const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+export function getSemanaVigente(ref = new Date()) {
+  const d = new Date(ref);
+  const dow = d.getDay();
+  const toMonday = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(d);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(d.getDate() + toMonday);
+
+  return DIAS_ORDEN.map((nombre, i) => {
+    const fecha = new Date(monday);
+    fecha.setDate(monday.getDate() + i);
+    return {
+      nombre,
+      corto: DIAS_CORTOS[i],
+      orden: i + 1,
+      fecha,
+      diaNum: fecha.getDate(),
+    };
+  });
+}
+
+export function formatSemanaRango(diasSemana) {
+  const first = diasSemana[0].fecha;
+  const last = diasSemana[6].fecha;
+  const mes = first.toLocaleDateString('es-AR', { month: 'short' });
+  const mesFin = last.toLocaleDateString('es-AR', { month: 'short' });
+  if (first.getMonth() === last.getMonth()) {
+    return `${first.getDate()}–${last.getDate()} ${mes}`;
+  }
+  return `${first.getDate()} ${mes} – ${last.getDate()} ${mesFin}`;
+}
+
+export function nombresCortos(label) {
+  if (!label) return '—';
+  return label
+    .split('·')
+    .map((s) => s.trim().split(/\s+/)[0])
+    .join('·');
+}
+
+export function calleCorta(str, max = 14) {
+  return truncate(str, max);
+}
+
 export function formatHora(hora) {
   if (!hora) return '';
   return hora.slice(0, 5);
