@@ -303,6 +303,12 @@ img {
   gap: 0.35rem;
 }
 
+.section-head__sub svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 .section-head__row {
   display: flex;
   align-items: flex-start;
